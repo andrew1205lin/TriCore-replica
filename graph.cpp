@@ -48,7 +48,7 @@ void CSRGraph::buildFromTxtFile(const std::string &filename) {
   offsets.push_back(0);
   for (int i = 0; i < num_nodes; ++i) {
     // some nodes have no out edges
-    if (!adjacency_list.count(i)) {
+    if (adjacency_list.count(i)) {
       offsets.push_back(offsets.back());
       continue;
     }
@@ -138,6 +138,7 @@ void CSRGraph::buildFromMmioFile(const std::string &filename) {
   for (int i = 0; i < num_nodes; ++i) {
     // some nodes have no out edges
     if (!adjacency_list.count(i)) {
+      // std::cout << "node " << i << " has no friend." << std::endl;
       offsets.push_back(offsets.back());
       continue;
     }
@@ -169,6 +170,48 @@ void CSRGraph::saveToBinary(const std::string &filename) {
              offsets.size() * sizeof(int));
 }
 
+void CSRGraph::checkIfContinuous(){
+  //result: every node in amazon0302 has at least one edge.
+
+  std::cout << "destination nodes: " << destinations.size() << std::endl;
+
+  std::vector<int> nodeNoOut;
+  int prev_off = -1,i=0;
+  for(int &off:offsets){
+    if(prev_off == off) {
+      //std::cout << "node "<< i << " has no out."<< std::endl; 
+      nodeNoOut.push_back(i); //already 1-index
+    }
+    prev_off = off;
+    i++;
+  }
+
+  std::set<int> nodeNoIn;
+  for (int i = 1; i <= num_nodes; ++i) {
+    nodeNoIn.insert(i);
+  }
+  for (int num : destinations) {
+    auto it = nodeNoIn.find(num+1); //back to 1-index
+    if (it != nodeNoIn.end()) {
+      nodeNoIn.erase(it);
+    }
+  }    
+
+  std::set<int> intersectionSet;
+  std::set_intersection(
+    nodeNoIn.begin(), nodeNoIn.end(),
+    nodeNoOut.begin(), nodeNoOut.end(),
+    std::inserter(intersectionSet, intersectionSet.begin())
+  );
+
+  std::cout << "Intersection: ";
+  for (int num : intersectionSet) {
+    std::cout << num << " ";
+  }
+  std::cout << std::endl;
+
+}
+
 void CSRGraph::loadFromBinary(const std::string &filename) {
   std::ifstream file(filename, std::ios::binary);
   if (!file) {
@@ -193,10 +236,11 @@ void CSRGraph::loadFromBinary(const std::string &filename) {
 int main() {
   CSRGraph graph("amazon0302_adj.mmio");
 
-  graph.saveToBinary("output_graph.bin");
+  graph.checkIfContinuous();
+  graph.saveToBinary("./graph_binary/amazon0302_adj.bin");
 
   CSRGraph loadedGraph;
-  loadedGraph.loadFromBinary("output_graph.bin");
+  loadedGraph.loadFromBinary("./graph_binary/amazon0302_adj.bin");
 
   return 0;
 }

@@ -29,6 +29,7 @@ public:
   void buildFromTxtFile(const std::string &filename);
   void buildFromMmioFile(const std::string &filename);
   void saveToBinary(const std::string &filename);
+  void checkIfContinuous();
   void loadFromBinary(const std::string &filename);
   bool operator==(const CSRGraph &rhs) const {
     return num_nodes == rhs.num_nodes && num_edges == rhs.num_edges &&

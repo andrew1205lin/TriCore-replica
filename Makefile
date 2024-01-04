@@ -13,4 +13,4 @@ mmio.o: mmio.c
 	g++ -c mmio.c ${FLAGS} -o mmio.o
 
 clean:
-	rm -rf *.o graph
+	rm -rf *.o *.bin graph 
